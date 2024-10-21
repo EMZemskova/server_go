@@ -17,6 +17,19 @@ func Hello(name string) (string, error) {
 	return message, nil
 }
 
+// Func: return hello-messages (type string) to many people + error
+func Hellos(names []string) (map[string]string, error) {
+	messages := make(map[string]string)
+	for _, name := range names {
+		message, err := Hello(name)
+		if err != nil {
+			return nil, err
+		}
+		messages[name] = message
+	}
+	return messages, nil
+}
+
 func randomFormat() string {
 	//Slice of "hello" messages
 	formats := []string{
