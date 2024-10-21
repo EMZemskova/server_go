@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-
 	log.SetPrefix("greetings: ")
-	log.SetFlags(0)
+	log.SetFlags(0) //No flags output
 
 	// Get a greeting message and error
 	message, err := greetings.Hello("")
+
 	//If error
 	if err != nil {
 		log.Fatal(err)
