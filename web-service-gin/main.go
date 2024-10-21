@@ -30,7 +30,7 @@ func main() {
 	router.GET("/albums", getAlbums)
 	//add an endPoint POST/albums
 	router.POST("/albums", postAlbums)
-	//add an endPoint GET/albums/[id]
+	//add an endPoint GET/albums/:id
 	router.GET("/albums/:id", getAlbumById)
 
 	//start server at localhost, port 8080
@@ -56,7 +56,7 @@ func postAlbums(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newAlbum)
 }
 
-// GET an album (endPoint: Get/albums/[id])
+// GET an album (endPoint: Get/albums/:id)
 func getAlbumById(c *gin.Context) {
 	//get id
 	id := c.Param("id")
