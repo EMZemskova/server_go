@@ -21,7 +21,7 @@ func randomFormat() string {
 	//Slice of "hello" messages
 	formats := []string{
 		"Hello, %v! Nice to see you!",
-		"Great to see you, %v!",
+		"Good to see you, %v!",
 		"Hi, %v!",
 	}
 	//Choose random one
