@@ -12,7 +12,7 @@ func main() {
 	log.SetFlags(0) //No flags output
 
 	// Get a greeting message and error
-	message, err := greetings.Hello("Kate")
+	message, err := greetings.Hello("John")
 
 	//If error
 	if err != nil {
