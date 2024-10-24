@@ -14,11 +14,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// to struct
+// storage.go
 var (
 	db    *gorm.DB
 	pgxDB *pgx.Conn
 )
 
+// models.go
+// важно - отдельно schemas для api отдельно для похода в базу
 type User struct {
 	ID       int64  `json:id`
 	Username string `json:username`
@@ -38,6 +42,8 @@ type Message struct {
 	Text   string `json:text`
 }
 
+// func Init(connString string) (*struct, error) {
+// pgx.Connect(ctx, "postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/calendar")
 func setupDatabase() {
 	dsn := "user=postgres password=123456 dbname=postgres port=5432 sslmode=disable"
 	var err error
@@ -66,6 +72,7 @@ func setupDatabase() {
 func main() {
 	setupDatabase()
 
+	// router := GetRouters() *gin.Engine
 	router := gin.Default()
 
 	router.POST("/login", loginUser)
@@ -77,9 +84,77 @@ func main() {
 	router.DELETE("/messages/:id", deleteMessage)
 	router.PUT("/messages/:id", editMessage)
 
+	//
 	router.Run("localhost:8080")
 }
 
+// в отдельном пакете
+// есть handler
+
+type UserProvider interface {
+	Create(user User) (int, error)
+}
+
+type handler struct {
+	db           *gorm.DB
+	userProvider UserProvider
+	// chatProvider ChatProvider
+}
+
+func New(userProvider UserProvider) *handler {
+	return &handler{
+		// db:           db,
+		userProvider: userProvider,
+	}
+}
+
+func (h *handler) LoginUser(c *gin.Context) {
+	var newUser User
+	err := c.BindJSON(&newUser)
+	if err != nil {
+		logrus.Error(errors.Wrap(err, "loginUser BindJSON"))
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := h.userProvider.Create(newUser)
+	// err
+
+	c.JSON(http.StatusCreated, id)
+}
+
+// в отдельном пакете
+// есть реализация
+
+type user struct {
+	db *gorm.DB
+}
+
+func (u *user) Create(user User) (int, error) {
+	db.Create(&user)
+
+	return 1, nil
+}
+
+type people struct {
+	db *gorm.DB
+}
+
+func (u *people) Create(user User) (int, error) {
+	db.Create(&user)
+
+	return 1, nil
+}
+
+func _main() {
+	New(&user{})
+	New(&people{})
+}
+
+// // // //
+
+// переносим в internal/handler/handler.go
+// struct и её методы loginUser....
 func loginUser(c *gin.Context) {
 	var newUser User
 	err := c.BindJSON(&newUser)
@@ -88,9 +163,17 @@ func loginUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// убираем в например в internal/user/user.go
+	// struct
+	// методы Create и тд (реализация)
+	// выше пример
 	db.Create(&newUser)
+
 	c.JSON(http.StatusCreated, newUser)
 }
+
+// делать chat и message релаизации
 
 func postChat(c *gin.Context) {
 	var newChat Chat
