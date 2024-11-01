@@ -2,23 +2,13 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-)
-
-// to struct
-// storage.go
-var (
-	db    *gorm.DB
-	pgxDB *pgx.Conn
 )
 
 // models.go
@@ -40,52 +30,6 @@ type Message struct {
 	Chat   int64  `json:chat`
 	Sender int64  `json:sender`
 	Text   string `json:text`
-}
-
-// func Init(connString string) (*struct, error) {
-// pgx.Connect(ctx, "postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/calendar")
-func setupDatabase() {
-	dsn := "user=postgres password=123456 dbname=postgres port=5432 sslmode=disable"
-	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatal("failed to connect to the database:", err)
-	}
-
-	pgxConfig, err := pgxpool.ParseConfig(dsn)
-	if err != nil {
-		log.Fatal("failed to parse config:", err)
-	}
-
-	pgxPool, err1 := pgxpool.ConnectConfig(context.Background(), pgxConfig)
-	if err1 != nil {
-		log.Fatal("failed to connect to the database:", err1)
-	}
-	pgxConn, err2 := pgxPool.Acquire(context.Background())
-	if err2 != nil {
-		log.Fatal("failed to connect to the database:", err2)
-	}
-	pgxDB = pgxConn.Conn()
-	log.Println("Database connection established successfully")
-}
-
-func main() {
-	setupDatabase()
-
-	// router := GetRouters() *gin.Engine
-	router := gin.Default()
-
-	router.POST("/login", loginUser)
-
-	router.POST("/chats", postChat)
-	router.GET("/chats/:id", getChatById)
-
-	router.POST("/messages", postMessage)
-	router.DELETE("/messages/:id", deleteMessage)
-	router.PUT("/messages/:id", editMessage)
-
-	//
-	router.Run("localhost:8080")
 }
 
 // в отдельном пакете
