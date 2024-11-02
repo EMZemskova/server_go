@@ -5,18 +5,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetRouters() *gin.Engine {
+func GetRouters(handle *handler.Handler) *gin.Engine {
 	router := gin.Default()
-	handler := handler.New()
 
-	router.POST("/login", handler.LoginUser)
+	router.POST("/login", handle.LoginUser)
 
-	router.POST("/chats", handler.PostChat)
-	router.GET("/chats/:id", handler.GetChatById)
+	router.POST("/chats", handle.PostChat)
+	router.GET("/chats/:id", handle.GetChatById)
 
-	router.POST("/messages", handler.PostMessage)
-	router.GET("/messages/:id", handler.GetMessagebyID)
-	router.DELETE("/messages/:id", handler.DeleteMessage)
-	router.PUT("/messages/:id", handler.EditMessage)
+	router.POST("/messages", handle.PostMessage)
+	router.GET("/messages/:id", handle.GetMessagebyID)
+	router.DELETE("/messages/:id", handle.DeleteMessage)
+	router.PUT("/messages/:id", handle.EditMessage)
 	return router
 }

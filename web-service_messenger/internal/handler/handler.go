@@ -12,162 +12,138 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type handler struct {
-	userProvider    user.UserProvider
-	chatProvider    chat.ChatProvider
-	messageProvider message.MessageProvider
+type Handler struct {
+	userProvider    user.Provider
+	chatProvider    chat.Provider
+	messageProvider message.Provider
 }
 
-func New() *handler {
-	return &handler{
+func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider message.Provider) *Handler {
+	return &Handler{
 		userProvider:    userProvider,
 		chatProvider:    chatProvider,
 		messageProvider: messageProvider,
 	}
 }
 
-func (h *handler) LoginUser(c *gin.Context) {
+func (h *Handler) LoginUser(c *gin.Context) {
 	var newUser user.User
-	err := c.BindJSON(&newUser)
-	if err != nil {
-		logrus.Error(errors.Wrap(err, "loginUser BindJSON"))
-		c.JSON(http.StatusBadRequest, err.Error())
+	if err := c.BindJSON(&newUser); err != nil {
+		logrus.Error("loginUser BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "loginUser BindJSON"))
 		return
 	}
-
 	id, err := h.userProvider.Create(newUser)
-
 	if err != nil {
-		logrus.Error(errors.Wrap(err, "loginUser Add to DB"))
-		c.JSON(http.StatusBadRequest, err.Error())
+		logrus.Error("loginUser Add to DB ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "loginUser Add to DB"))
 		return
 	}
-
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *handler) PostChat(c *gin.Context) {
+func (h *Handler) PostChat(c *gin.Context) {
 	var newChat chat.Chat
-	err := c.BindJSON(&newChat)
-	if err != nil {
-		logrus.Error(errors.Wrap(err, "postChat BindJSON"))
-		c.JSON(http.StatusBadRequest, err.Error())
+	if err := c.BindJSON(&newChat); err != nil {
+		logrus.Error("postChat BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "postChat BindJSON"))
 		return
 	}
 	id, err := h.chatProvider.Create(newChat)
-
 	if err != nil {
-		logrus.Error(errors.Wrap(err, "postChat Add to DB"))
-		c.JSON(http.StatusBadRequest, err.Error())
+		logrus.Error("postChat Add to DB ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "postChat Add to DB"))
 		return
 	}
-
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *handler) GetChatById(c *gin.Context) {
+func (h *Handler) GetChatById(c *gin.Context) {
 	var chat chat.Chat
 	findID := c.Param("id")
-
 	id, err := strconv.Atoi(findID)
 	if err != nil {
-		logrus.Error(errors.Wrap(err, "getChatById invalid ID format"))
-		c.JSON(http.StatusBadRequest, "Invalid ID format")
+		logrus.Error("getChatById invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "getChatById invalid ID format"))
 		return
 	}
-
-	chat, err1 := h.chatProvider.Get(int64(id))
-
-	if err1 != nil {
-		logrus.Error(errors.Wrap(err1, "getChatById Find Chat"))
-		c.JSON(http.StatusBadRequest, err1.Error())
+	chat, err = h.chatProvider.Get(int64(id))
+	if err != nil {
+		logrus.Error("getChatById Find Chat ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "getChatById Find Chat"))
 		return
 	}
-
 	c.JSON(http.StatusOK, chat)
 }
 
-func (h *handler) PostMessage(c *gin.Context) {
+func (h *Handler) PostMessage(c *gin.Context) {
 	var newMessage message.Message
-	err := c.BindJSON(&newMessage)
-	if err != nil {
-		logrus.Error(errors.Wrap(err, "postMessage BindJSON"))
-		c.JSON(http.StatusBadRequest, err.Error())
+	if err := c.BindJSON(&newMessage); err != nil {
+		logrus.Error("postMessage BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "postMessage BindJSON"))
 	}
-	id, err1 := h.messageProvider.Create(newMessage)
-
-	if err1 != nil {
-		logrus.Error("postMessage Error executing query:", err1)
-		c.JSON(http.StatusBadRequest, err1.Error())
+	id, err := h.messageProvider.Create(newMessage)
+	if err != nil {
+		logrus.Error("postMessage Error executing query:", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "Error executing query"))
 		return
 	}
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *handler) GetMessagebyID(c *gin.Context) {
+func (h *Handler) GetMessagebyID(c *gin.Context) {
 	var message message.Message
 	findID := c.Param("id")
-
 	id, err := strconv.Atoi(findID)
 	if err != nil {
-		logrus.Error(errors.Wrap(err, "GetMessagebyID invalid ID format"))
-		c.JSON(http.StatusBadRequest, "Invalid ID format")
+		logrus.Error("GetMessagebyID invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "GetMessagebyID invalid ID format"))
 		return
 	}
-
-	message, err1 := h.messageProvider.Get(int64(id))
-
-	if err1 != nil {
-		logrus.Error(errors.Wrap(err1, "GetMessagebyID Find Chat"))
-		c.JSON(http.StatusBadRequest, err1.Error())
+	message, err = h.messageProvider.Get(int64(id))
+	if err != nil {
+		logrus.Error("GetMessagebyID Find Chat ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "GetMessagebyID Find Chat"))
 		return
 	}
-
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *handler) EditMessage(c *gin.Context) {
+func (h *Handler) EditMessage(c *gin.Context) {
 	var newMessage message.Message
 	ID := c.Param("id")
-	err := c.BindJSON(&newMessage)
-	if err != nil {
-		logrus.Error(errors.Wrap(err, "EditMessage BindJSON"))
-		c.JSON(http.StatusBadRequest, err.Error())
+	if err := c.BindJSON(&newMessage); err != nil {
+		logrus.Error("EditMessage BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditMessage BindJSON"))
 	}
-
-	id, err1 := strconv.Atoi(ID)
-	if err1 != nil {
-		logrus.Error(errors.Wrap(err1, "EditMessage invalid ID format"))
-		c.JSON(http.StatusBadRequest, "Invalid ID format")
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		logrus.Error("EditMessage invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditMessage invalid ID format"))
 		return
 	}
-
 	newMessage, err = h.messageProvider.Edit(newMessage, int64(id))
-
-	if err1 != nil {
-		logrus.Error("EditMessage Error executing query:", err1)
-		c.JSON(http.StatusBadRequest, err1.Error())
+	if err != nil {
+		logrus.Error("EditMessage Error executing query ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditMessage Error executing query"))
 		return
 	}
 	c.JSON(http.StatusCreated, newMessage)
 }
 
-func (h *handler) DeleteMessage(c *gin.Context) {
+func (h *Handler) DeleteMessage(c *gin.Context) {
 	ID := c.Param("id")
-
-	id, err1 := strconv.Atoi(ID)
-	if err1 != nil {
-		logrus.Error(errors.Wrap(err1, "DeleteMessage invalid ID format"))
-		c.JSON(http.StatusBadRequest, "Invalid ID format")
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		logrus.Error("DeleteMessage invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteMessage invalid ID format"))
 		return
 	}
-	err := h.messageProvider.Delete(int64(id))
-
+	err = h.messageProvider.Delete(int64(id))
 	if err != nil {
 		logrus.Error("DeleteMessage Error executing query:", err)
-		c.JSON(http.StatusBadRequest, err.Error)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteMessage Error executing query"))
 		return
 	}
-
 	c.JSON(http.StatusOK, nil)
 }

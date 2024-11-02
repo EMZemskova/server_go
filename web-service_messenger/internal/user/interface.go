@@ -1,5 +1,5 @@
 package user
 
-type UserProvider interface {
+type Provider interface {
 	Create(user User) (int, error)
 }

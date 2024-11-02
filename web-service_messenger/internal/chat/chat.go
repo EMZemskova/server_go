@@ -7,30 +7,30 @@ import (
 )
 
 type chat struct {
-	db      *gorm.DB
-	id      int64
-	creator int64
-	guest   int64
+	db *gorm.DB
 }
 
-func (ch *chat) Create(chat Chat) (int, error) {
+func New(db *gorm.DB) *chat {
+	return &chat{db: db}
+}
 
-	//need to replace Chat to chat?
-	result := ch.db.Create(&chat)
+func (c *chat) Create(chat Chat) (int, error) {
+
+	result := c.db.Create(&chat)
 	if result.Error != nil {
+		logrus.Error("failed create chat", result.Error)
 		return 0, errors.Wrap(result.Error, "failed to create chat")
 	}
-	return int(chat.ID), nil
+	return int(chat.ID), nil //?
 }
 
-func (ch *chat) Get(id int64) (Chat, error) {
+func (c *chat) Get(id int64) (Chat, error) {
 
-	//chat or Chat or replace?
 	var findchat Chat
-	result := ch.db.First(&findchat, id)
+	result := c.db.First(&findchat, id) //?
 	if result.Error != nil {
-		logrus.Error(errors.Wrap(result.Error, "getChatById"))
-		return findchat, result.Error //can't return nil?
+		logrus.Error("getChatById", result.Error)
+		return Chat{}, errors.Wrap(result.Error, "getChatById")
 	}
 	return findchat, nil
 }

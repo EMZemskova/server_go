@@ -1,6 +1,6 @@
 package message
 
-type MessageProvider interface {
+type Provider interface {
 	Create(message Message) (int, error)
 
 	Get(id int64) (Message, error)
