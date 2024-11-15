@@ -42,6 +42,23 @@ func (h *Handler) LoginUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, id)
 }
 
+func (h *Handler) UserStats(c *gin.Context) {
+	ID := c.Param("id")
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		logrus.Error("UserStats invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats invalid ID format"))
+		return
+	}
+	UserStat, err := h.userProvider.GetStat(int64(id))
+	if err != nil {
+		logrus.Error("UserStats error ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats error"))
+		return
+	}
+	c.JSON(http.StatusOK, UserStat)
+}
+
 func (h *Handler) PostChat(c *gin.Context) {
 	var newChat chat.Chat
 	if err := c.BindJSON(&newChat); err != nil {
@@ -59,7 +76,6 @@ func (h *Handler) PostChat(c *gin.Context) {
 }
 
 func (h *Handler) GetChatById(c *gin.Context) {
-	var chat chat.Chat
 	findID := c.Param("id")
 	id, err := strconv.Atoi(findID)
 	if err != nil {
@@ -67,13 +83,57 @@ func (h *Handler) GetChatById(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "getChatById invalid ID format"))
 		return
 	}
-	chat, err = h.chatProvider.Get(int64(id))
+	chat, err := h.chatProvider.Get(int64(id))
 	if err != nil {
 		logrus.Error("getChatById Find Chat ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "getChatById Find Chat"))
 		return
 	}
 	c.JSON(http.StatusOK, chat)
+}
+
+func (h *Handler) EditChat(c *gin.Context) {
+	var editChat chat.Chat
+	ID := c.Param("id")
+	if err := c.BindJSON(&editChat); err != nil {
+		logrus.Error("EditChat BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat BindJSON"))
+	}
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		logrus.Error("EditChat invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat invalid ID format"))
+		return
+	}
+	editChat, err = h.chatProvider.Edit(editChat, int64(id))
+	if err != nil {
+		logrus.Error("EditChat Error executing query ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat Error executing query"))
+		return
+	}
+	c.JSON(http.StatusCreated, editChat)
+}
+
+func (h *Handler) DeleteChat(c *gin.Context) {
+	var deletedChat chat.Chat
+	ID := c.Param("id")
+	if err := c.BindJSON(&deletedChat); err != nil {
+		logrus.Error("DeleteChat BindJSON ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteChat BindJSON"))
+	}
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		logrus.Error("EditChat invalid ID format ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat invalid ID format"))
+		return
+	}
+	id, err = h.chatProvider.Delete(deletedChat, int64(id))
+	if err != nil {
+		logrus.Error("DeleteChat Error executing query:", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteChat Error executing query"))
+		return
+	}
+	c.JSON(http.StatusOK, id)
 }
 
 func (h *Handler) PostMessage(c *gin.Context) {
@@ -92,7 +152,6 @@ func (h *Handler) PostMessage(c *gin.Context) {
 }
 
 func (h *Handler) GetMessagebyID(c *gin.Context) {
-	var message message.Message
 	findID := c.Param("id")
 	id, err := strconv.Atoi(findID)
 	if err != nil {
@@ -100,7 +159,7 @@ func (h *Handler) GetMessagebyID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "GetMessagebyID invalid ID format"))
 		return
 	}
-	message, err = h.messageProvider.Get(int64(id))
+	message, err := h.messageProvider.Get(int64(id))
 	if err != nil {
 		logrus.Error("GetMessagebyID Find Chat ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "GetMessagebyID Find Chat"))

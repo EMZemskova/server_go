@@ -1,60 +1,53 @@
 package message
 
 import (
-	"context"
-
-	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type message struct {
-	db *pgx.Conn
+	db *gorm.DB
 }
 
-func New(db *pgx.Conn) *message {
+func New(db *gorm.DB) *message {
 	return &message{db: db}
 }
 
 func (m *message) Create(message Message) (int, error) {
-	err := m.db.QueryRow(context.Background(),
-		"INSERT INTO messages (chat, sender, text) VALUES ($1, $2, $3) RETURNING id", message.Chat, message.Sender, message.Text).Scan(&message.ID)
-	if err != nil {
-		logrus.Error("postMessage Error executing query:", err)
-		return 0, errors.Wrap(err, "failed to create message")
+	result := m.db.Create(&message)
+	if result.Error != nil {
+		logrus.Error("failed create message", result.Error)
+		return 0, errors.Wrap(result.Error, "failed to create message")
 	}
 	id := int(message.ID)
-	return id, err
+	return id, nil
 }
 
 func (m *message) Get(id int64) (Message, error) {
-	var message Message
-	err := m.db.QueryRow(context.Background(), "SELECT id, chat, sender, text FROM messages WHERE id=$1", id).
-		Scan(&message.ID, &message.Chat, &message.Sender, &message.Text)
-	if err != nil {
-		logrus.Error("GetMessage Error executing query:", err)
-		return Message{}, errors.Wrap(err, "failed to get message")
+	var findmessage Message
+	result := m.db.First(&findmessage, id)
+	if result.Error != nil {
+		logrus.Error("getMessageById", result.Error)
+		return Message{}, errors.Wrap(result.Error, "getMessageById")
 	}
-	return message, nil
+	return findmessage, nil
 }
 
 func (m *message) Edit(message Message, id int64) (Message, error) {
-
-	err := m.db.QueryRow(context.Background(),
-		"UPDATE messages SET chat=$1, sender=$2, text=$3 WHERE id=$4 RETURNING id, chat, sender, text",
-		message.Chat, message.Sender, message.Text, id).Scan(&message.ID, &message.Chat, &message.Sender, &message.Text)
-	if err != nil {
-		logrus.Error("editMessage Error executing query:", err)
-		return Message{}, errors.Wrap(err, "failed to edit message")
+	result := m.db.Model(&Message{}).Where("id = ?", id).Updates(message)
+	if result.Error != nil {
+		logrus.Error("failed update message", result.Error)
+		return Message{}, errors.Wrap(result.Error, "failed to update message")
 	}
 	return message, nil
 }
 
 func (m *message) Delete(id int64) error {
-	_, err := m.db.Exec(context.Background(), "DELETE FROM messages WHERE id=$1", id)
-	if err != nil {
-		logrus.Error("deleteMessage Error executing query:", err)
-		return errors.Wrap(err, "failed to delete message")
+	result := m.db.Delete(&Message{}, id)
+	if result.Error != nil {
+		logrus.Error("deleteMessage Error executing query:", result.Error)
+		return errors.Wrap(result.Error, "failed to delete message")
 	}
 	return nil
 }

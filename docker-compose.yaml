@@ -1,18 +1,15 @@
 version: '3.8'
 
 services:
-  backend:
-    build:
-      context: github.com/EMZemskova/server_go
-      dockerfile: Dockerfile  
-    container_name: server_go
+  api-gateway:
+    build: ./
     ports:
       - "8080:8080"  
     depends_on:
       - db
     environment:
       - DB_HOST=db
-      - DB_PORT=5432
+      - DB_PORT=5433
       - DB_USER=postgres
       - DB_PASSWORD=123456
       - DB_NAME=postgres
@@ -27,7 +24,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data  
     ports:
-      - "5432:5432" 
+      - "5432:5433" 
 
 volumes:
   pgdata:

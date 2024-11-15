@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -16,8 +17,8 @@ type storage struct {
 }
 
 func Init(connString string) (*storage, error) {
+	DB := &storage{}
 	var err error
-	var DB storage
 	DB.Gormdb, err = gorm.Open(postgres.Open(connString), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect to the database:", err)
@@ -29,6 +30,6 @@ func Init(connString string) (*storage, error) {
 		return nil, errors.Wrap(err, "failed to connect to the database")
 	}
 	DB.PgxDB = conn
-	log.Println("Database connection established successfully")
-	return &DB, nil
+	logrus.Info("Database connection established successfully")
+	return DB, nil
 }

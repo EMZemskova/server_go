@@ -19,7 +19,7 @@ func main() {
 
 	userProvider := user.New(db.Gormdb)
 	chatProvider := chat.New(db.Gormdb)
-	messageProvider := message.New(db.PgxDB)
+	messageProvider := message.New(db.Gormdb)
 
 	handle := handler.New(userProvider, chatProvider, messageProvider)
 	router := internal.GetRouters(handle)
