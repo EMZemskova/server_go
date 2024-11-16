@@ -1,5 +1,7 @@
 package user
 
+import "sync"
+
 type User struct {
 	ID       int64
 	Username string
@@ -13,5 +15,5 @@ type Statistics struct {
 	WriteMessage int64
 }
 
-//var statsMap map[int64]Statistics
-//statMap := make(map[int64]Statistics)
+var userStatistics = make(map[int64]Statistics)
+var mu sync.RWMutex

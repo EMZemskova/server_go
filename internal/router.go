@@ -10,7 +10,7 @@ func GetRouters(handle *handler.Handler) *gin.Engine {
 
 	router.POST("/login", handle.LoginUser)
 	router.GET("/user/stats/:id", handle.UserStats)
-	//router.GET("/user/stats", handle.PeopleStats)
+	router.GET("/user/stats", handle.PeopleStats)
 
 	router.POST("/chats", handle.PostChat)
 	router.GET("/chats/:id", handle.GetChatById)

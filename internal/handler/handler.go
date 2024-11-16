@@ -59,6 +59,16 @@ func (h *Handler) UserStats(c *gin.Context) {
 	c.JSON(http.StatusOK, UserStat)
 }
 
+func (h *Handler) PeopleStats(c *gin.Context) {
+	PeopleStats, err := h.userProvider.GetStats()
+	if err != nil {
+		logrus.Error("PeopleStats error ", err)
+		c.JSON(http.StatusBadRequest, errors.Wrap(err, "PeopleStats error"))
+		return
+	}
+	c.JSON(http.StatusOK, PeopleStats)
+}
+
 func (h *Handler) PostChat(c *gin.Context) {
 	var newChat chat.Chat
 	if err := c.BindJSON(&newChat); err != nil {
