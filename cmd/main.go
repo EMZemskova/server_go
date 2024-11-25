@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	connstring := "user=postgres password=123456 dbname=postgres port=5432 sslmode=disable"
+	connstring := "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"
 	db, err := storage.Init(connstring)
 	if err != nil {
 		logrus.Fatal("Failed database connect", err)
