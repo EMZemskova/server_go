@@ -6,6 +6,7 @@ import (
 
 	"github.com/EMZemskova/server_go/internal/chat"
 	"github.com/EMZemskova/server_go/internal/message"
+	"github.com/EMZemskova/server_go/internal/stats"
 	"github.com/EMZemskova/server_go/internal/user"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -16,13 +17,15 @@ type Handler struct {
 	userProvider    user.Provider
 	chatProvider    chat.Provider
 	messageProvider message.Provider
+	statsProvider   stats.Cacher
 }
 
-func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider message.Provider) *Handler {
+func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider message.Provider, statsProvider stats.Cacher) *Handler {
 	return &Handler{
 		userProvider:    userProvider,
 		chatProvider:    chatProvider,
 		messageProvider: messageProvider,
+		statsProvider:   statsProvider,
 	}
 }
 
@@ -43,30 +46,30 @@ func (h *Handler) LoginUser(c *gin.Context) {
 }
 
 func (h *Handler) UserStats(c *gin.Context) {
-	ID := c.Param("id")
-	id, err := strconv.Atoi(ID)
+	readID := c.Param("id")
+	id, err := strconv.Atoi(readID)
 	if err != nil {
 		logrus.Error("UserStats invalid ID format ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats invalid ID format"))
 		return
 	}
-	UserStat, err := h.userProvider.GetStat(int64(id))
+	userStat, err := h.statsProvider.CacheStat(int64(id))
 	if err != nil {
 		logrus.Error("UserStats error ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats error"))
 		return
 	}
-	c.JSON(http.StatusOK, UserStat)
+	c.JSON(http.StatusOK, userStat)
 }
 
 func (h *Handler) PeopleStats(c *gin.Context) {
-	PeopleStats, err := h.userProvider.GetStats()
+	peopleStats, err := h.statsProvider.CacheStats()
 	if err != nil {
 		logrus.Error("PeopleStats error ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "PeopleStats error"))
 		return
 	}
-	c.JSON(http.StatusOK, PeopleStats)
+	c.JSON(http.StatusOK, peopleStats)
 }
 
 func (h *Handler) PostChat(c *gin.Context) {
@@ -104,12 +107,12 @@ func (h *Handler) GetChatById(c *gin.Context) {
 
 func (h *Handler) EditChat(c *gin.Context) {
 	var editChat chat.Chat
-	ID := c.Param("id")
+	readID := c.Param("id")
 	if err := c.BindJSON(&editChat); err != nil {
 		logrus.Error("EditChat BindJSON ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat BindJSON"))
 	}
-	id, err := strconv.Atoi(ID)
+	id, err := strconv.Atoi(readID)
 	if err != nil {
 		logrus.Error("EditChat invalid ID format ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat invalid ID format"))
@@ -126,12 +129,12 @@ func (h *Handler) EditChat(c *gin.Context) {
 
 func (h *Handler) DeleteChat(c *gin.Context) {
 	var deletedChat chat.Chat
-	ID := c.Param("id")
+	readID := c.Param("id")
 	if err := c.BindJSON(&deletedChat); err != nil {
 		logrus.Error("DeleteChat BindJSON ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteChat BindJSON"))
 	}
-	id, err := strconv.Atoi(ID)
+	id, err := strconv.Atoi(readID)
 	if err != nil {
 		logrus.Error("EditChat invalid ID format ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditChat invalid ID format"))
@@ -180,12 +183,12 @@ func (h *Handler) GetMessagebyID(c *gin.Context) {
 
 func (h *Handler) EditMessage(c *gin.Context) {
 	var newMessage message.Message
-	ID := c.Param("id")
+	readID := c.Param("id")
 	if err := c.BindJSON(&newMessage); err != nil {
 		logrus.Error("EditMessage BindJSON ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditMessage BindJSON"))
 	}
-	id, err := strconv.Atoi(ID)
+	id, err := strconv.Atoi(readID)
 	if err != nil {
 		logrus.Error("EditMessage invalid ID format ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "EditMessage invalid ID format"))
@@ -201,8 +204,8 @@ func (h *Handler) EditMessage(c *gin.Context) {
 }
 
 func (h *Handler) DeleteMessage(c *gin.Context) {
-	ID := c.Param("id")
-	id, err := strconv.Atoi(ID)
+	readID := c.Param("id")
+	id, err := strconv.Atoi(readID)
 	if err != nil {
 		logrus.Error("DeleteMessage invalid ID format ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "DeleteMessage invalid ID format"))

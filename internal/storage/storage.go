@@ -13,12 +13,12 @@ type storage struct {
 }
 
 func Init(connString string) (*storage, error) {
-	DB := &storage{}
+	db := &storage{}
 	var err error
-	DB.Gormdb, err = gorm.Open(postgres.Open(connString), &gorm.Config{})
+	db.Gormdb, err = gorm.Open(postgres.Open(connString), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect to the database:", err)
 		return nil, errors.Wrap(err, "failed to connect to the database")
 	}
-	return DB, nil
+	return db, nil
 }
