@@ -26,4 +26,5 @@ func main() {
 	handle := handler.New(userProvider, chatProvider, messageProvider, statsProvider)
 	router := internal.GetRouters(handle)
 	router.Run("localhost:8080")
+	statsProvider.StartCacheUpdater()
 }
