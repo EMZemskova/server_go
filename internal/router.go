@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetRouters(handle *handler.Handler) *gin.Engine {
+func GetRouters(handle *handler.Handle) *gin.Engine {
 	router := gin.Default()
 
 	router.POST("/login", handle.LoginUser)

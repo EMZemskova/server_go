@@ -5,10 +5,3 @@ type Provider interface {
 
 	GetStats() ([]Statistics, error)
 }
-
-type Cacher interface {
-	Provider
-	CacheStat(id int64) (Statistics, error)
-
-	CacheStats() (map[int64]Statistics, error)
-}

@@ -1,8 +1,6 @@
 package stats
 
 import (
-	"time"
-
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -11,21 +9,8 @@ type stats struct {
 	db *gorm.DB
 }
 
-func New(db *gorm.DB) *stats {
+func NewProvider(db *gorm.DB) *stats {
 	return &stats{db: db}
-}
-
-func (s *stats) StartCacheUpdater() {
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		<-ticker.C
-		_, err := s.CacheStats()
-		if err != nil {
-			errors.Wrap(err, "failed to get stat after 30s")
-		}
-	}
 }
 
 func (s *stats) GetStat(id int64) (Statistics, error) {
@@ -43,14 +28,6 @@ func (s *stats) GetStat(id int64) (Statistics, error) {
 	return stats, nil
 }
 
-func (s *stats) CacheStat(id int64) (Statistics, error) {
-	userStat, err := s.GetStat(id)
-	if err != nil {
-		return Statistics{}, errors.Wrap(err, "failed to get stats for person")
-	}
-	return userStat, err
-}
-
 func (s *stats) GetStats() ([]Statistics, error) {
 	var stats []Statistics
 	query :=
@@ -63,23 +40,4 @@ func (s *stats) GetStats() ([]Statistics, error) {
 		return nil, errors.Wrap(err, "failed to get people statistics")
 	}
 	return stats, nil
-}
-
-func (s *stats) CacheStats() (map[int64]Statistics, error) {
-	MU.RLock()
-	if time.Since(lastUpdate) < 30*time.Second {
-		MU.RUnlock()
-		return UserStatistics, nil
-	}
-	MU.RUnlock()
-	stats, err := s.GetStats()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get stats for caching")
-	}
-	MU.Lock()
-	defer MU.Unlock()
-	for _, stat := range stats {
-		UserStatistics[stat.ID] = stat
-	}
-	return UserStatistics, err
 }

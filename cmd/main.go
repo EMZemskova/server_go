@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	connstring := "postgresql://postgres:123456@localhost:5432/postgres"
+	connstring := "postgresql://postgres:postgres@postgres:5432/postgres"
 	db, err := storage.Init(connstring)
 	if err != nil {
 		logrus.Fatal("Failed database connect", err)
@@ -21,12 +21,13 @@ func main() {
 	userProvider := user.New(db.Gormdb)
 	chatProvider := chat.New(db.Gormdb)
 	messageProvider := message.New(db.Gormdb)
-	statsProvider := stats.New(db.Gormdb)
+	statsProvider := stats.NewProvider(db.Gormdb)
+	cacheStatsProvider := stats.NewCache(statsProvider)
 
-	handle := handler.New(userProvider, chatProvider, messageProvider, statsProvider)
+	handle := handler.New(userProvider, chatProvider, messageProvider, cacheStatsProvider)
 	router := internal.GetRouters(handle)
-	router.Run("localhost:8080")
+	router.Run("0.0.0.0:8080")
 	go func() {
-		statsProvider.StartCacheUpdater()
+		cacheStatsProvider.StartCacheUpdater()
 	}()
 }

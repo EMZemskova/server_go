@@ -13,15 +13,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Handler struct {
+type Handle struct {
 	userProvider    user.Provider
 	chatProvider    chat.Provider
 	messageProvider message.Provider
-	statsProvider   stats.Cacher
+	statsProvider   stats.Provider
 }
 
-func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider message.Provider, statsProvider stats.Cacher) *Handler {
-	return &Handler{
+func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider message.Provider, statsProvider stats.Provider) *Handle {
+	return &Handle{
 		userProvider:    userProvider,
 		chatProvider:    chatProvider,
 		messageProvider: messageProvider,
@@ -29,7 +29,7 @@ func New(userProvider user.Provider, chatProvider chat.Provider, messageProvider
 	}
 }
 
-func (h *Handler) LoginUser(c *gin.Context) {
+func (h *Handle) LoginUser(c *gin.Context) {
 	var newUser user.User
 	if err := c.BindJSON(&newUser); err != nil {
 		logrus.Error("loginUser BindJSON ", err)
@@ -45,7 +45,7 @@ func (h *Handler) LoginUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *Handler) UserStats(c *gin.Context) {
+func (h *Handle) UserStats(c *gin.Context) {
 	readID := c.Param("id")
 	id, err := strconv.Atoi(readID)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *Handler) UserStats(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats invalid ID format"))
 		return
 	}
-	userStat, err := h.statsProvider.CacheStat(int64(id))
+	userStat, err := h.statsProvider.GetStat(int64(id))
 	if err != nil {
 		logrus.Error("UserStats error ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "UserStats error"))
@@ -62,8 +62,8 @@ func (h *Handler) UserStats(c *gin.Context) {
 	c.JSON(http.StatusOK, userStat)
 }
 
-func (h *Handler) PeopleStats(c *gin.Context) {
-	peopleStats, err := h.statsProvider.CacheStats()
+func (h *Handle) PeopleStats(c *gin.Context) {
+	peopleStats, err := h.statsProvider.GetStats()
 	if err != nil {
 		logrus.Error("PeopleStats error ", err)
 		c.JSON(http.StatusBadRequest, errors.Wrap(err, "PeopleStats error"))
@@ -72,7 +72,7 @@ func (h *Handler) PeopleStats(c *gin.Context) {
 	c.JSON(http.StatusOK, peopleStats)
 }
 
-func (h *Handler) PostChat(c *gin.Context) {
+func (h *Handle) PostChat(c *gin.Context) {
 	var newChat chat.Chat
 	if err := c.BindJSON(&newChat); err != nil {
 		logrus.Error("postChat BindJSON ", err)
@@ -88,7 +88,7 @@ func (h *Handler) PostChat(c *gin.Context) {
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *Handler) GetChatById(c *gin.Context) {
+func (h *Handle) GetChatById(c *gin.Context) {
 	findID := c.Param("id")
 	id, err := strconv.Atoi(findID)
 	if err != nil {
@@ -105,7 +105,7 @@ func (h *Handler) GetChatById(c *gin.Context) {
 	c.JSON(http.StatusOK, chat)
 }
 
-func (h *Handler) EditChat(c *gin.Context) {
+func (h *Handle) EditChat(c *gin.Context) {
 	var editChat chat.Chat
 	readID := c.Param("id")
 	if err := c.BindJSON(&editChat); err != nil {
@@ -127,7 +127,7 @@ func (h *Handler) EditChat(c *gin.Context) {
 	c.JSON(http.StatusCreated, editChat)
 }
 
-func (h *Handler) DeleteChat(c *gin.Context) {
+func (h *Handle) DeleteChat(c *gin.Context) {
 	var deletedChat chat.Chat
 	readID := c.Param("id")
 	if err := c.BindJSON(&deletedChat); err != nil {
@@ -149,7 +149,7 @@ func (h *Handler) DeleteChat(c *gin.Context) {
 	c.JSON(http.StatusOK, id)
 }
 
-func (h *Handler) PostMessage(c *gin.Context) {
+func (h *Handle) PostMessage(c *gin.Context) {
 	var newMessage message.Message
 	if err := c.BindJSON(&newMessage); err != nil {
 		logrus.Error("postMessage BindJSON ", err)
@@ -164,7 +164,7 @@ func (h *Handler) PostMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, id)
 }
 
-func (h *Handler) GetMessagebyID(c *gin.Context) {
+func (h *Handle) GetMessagebyID(c *gin.Context) {
 	findID := c.Param("id")
 	id, err := strconv.Atoi(findID)
 	if err != nil {
@@ -181,7 +181,7 @@ func (h *Handler) GetMessagebyID(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *Handler) EditMessage(c *gin.Context) {
+func (h *Handle) EditMessage(c *gin.Context) {
 	var newMessage message.Message
 	readID := c.Param("id")
 	if err := c.BindJSON(&newMessage); err != nil {
@@ -203,7 +203,7 @@ func (h *Handler) EditMessage(c *gin.Context) {
 	c.JSON(http.StatusCreated, newMessage)
 }
 
-func (h *Handler) DeleteMessage(c *gin.Context) {
+func (h *Handle) DeleteMessage(c *gin.Context) {
 	readID := c.Param("id")
 	id, err := strconv.Atoi(readID)
 	if err != nil {
