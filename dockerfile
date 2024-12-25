@@ -14,5 +14,6 @@ FROM alpine:latest
 
 WORKDIR /app
 COPY --from=builder /app/api-gateway .
+COPY --from=builder /migrations ./migrations
 
 ENTRYPOINT ["./api-gateway"]

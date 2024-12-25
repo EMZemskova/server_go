@@ -14,8 +14,11 @@ type cacher struct {
 	userStatistics map[int64]Statistics
 }
 
-func NewCache(Provider) *cacher {
-	return &cacher{}
+func NewCache(provider Provider) *cacher {
+	return &cacher{
+		Provider:       provider,
+		userStatistics: make(map[int64]Statistics),
+	}
 }
 
 func (c *cacher) StartCacheUpdater() {

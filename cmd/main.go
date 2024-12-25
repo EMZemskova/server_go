@@ -17,6 +17,10 @@ func main() {
 	if err != nil {
 		logrus.Fatal("Failed database connect", err)
 	}
+	migrationsDir := "./migrations"
+	if err := db.RunMigrations(migrationsDir); err != nil {
+		logrus.Fatalf("Error running migrations: %v", err)
+	}
 
 	userProvider := user.New(db.Gormdb)
 	chatProvider := chat.New(db.Gormdb)
