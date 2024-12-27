@@ -1,41 +1,55 @@
 package storage
 
 import (
+	"io/ioutil"
 	"log"
+	"os"
+	"path/filepath"
+	"sort"
 
+	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
-	"github.com/pressly/goose/v3"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 type storage struct {
-	Gormdb *gorm.DB
+	Conn *pgx.Conn
 }
 
 func Init(connString string) (*storage, error) {
-	db := &storage{}
-	var err error
-	db.Gormdb, err = gorm.Open(postgres.Open(connString), &gorm.Config{})
+	config, err := pgx.ParseConnectionString(connString)
 	if err != nil {
-		log.Fatal("failed to connect to the database:", err)
-		return nil, errors.Wrap(err, "failed to connect to the database")
+		return nil, errors.Wrap(err, "failed to parse connection string")
 	}
-	return db, nil
+	conn, err := pgx.Connect(config)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to database")
+	}
+	log.Println("Connected to database")
+	return &storage{Conn: conn}, nil
 }
 
 func (s *storage) RunMigrations(migrationsDir string) error {
-	db, err := s.Gormdb.DB()
+	files, err := ioutil.ReadDir(migrationsDir)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve *sql.DB from Gorm")
+		return errors.Wrap(err, "failed to read migrations directory")
 	}
-	if err := goose.SetDialect("postgres"); err != nil {
-		return errors.Wrap(err, "failed to set Goose dialect")
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+	for _, file := range files {
+		if filepath.Ext(file.Name()) != ".sql" {
+			continue
+		}
+		filePath := filepath.Join(migrationsDir, file.Name())
+		log.Printf("Applying migration: %s", filePath)
+		query, err := os.ReadFile(filePath)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read migration file: %s", filePath)
+		}
+		if _, err := s.Conn.Exec(string(query)); err != nil {
+			return errors.Wrapf(err, "failed to execute migration: %s", filePath)
+		}
 	}
-
-	if err := goose.Up(db, migrationsDir); err != nil {
-		return errors.Wrap(err, "failed to run migrations")
-	}
-	log.Println("Migrations applied successfully")
+	log.Println("All migrations applied successfully")
 	return nil
 }

@@ -1,22 +1,28 @@
 package user
 
 import (
+	"github.com/jackc/pgx"
 	"github.com/pkg/errors"
-	"gorm.io/gorm"
+	"github.com/sirupsen/logrus"
 )
 
 type user struct {
-	db *gorm.DB
+	db *pgx.Conn
 }
 
-func New(db *gorm.DB) *user {
+func New(db *pgx.Conn) *user {
 	return &user{db: db}
 }
 
 func (u *user) Create(user User) (int, error) {
-	result := u.db.Create(&user)
-	if result.Error != nil {
-		return 0, errors.Wrap(result.Error, "failed to create user")
+	query := `
+		INSERT INTO users (username, password)
+		VALUES ($1, $2)
+		RETURNING id`
+	var userID int
+	if err := u.db.QueryRow(query, user.Username, user.Password).Scan(&userID); err != nil {
+		logrus.Error("failed create chat", err)
+		return 0, errors.Wrap(err, "failed to create user")
 	}
-	return int(user.ID), nil
+	return userID, nil
 }

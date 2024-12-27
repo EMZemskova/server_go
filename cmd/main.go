@@ -22,10 +22,10 @@ func main() {
 		logrus.Fatalf("Error running migrations: %v", err)
 	}
 
-	userProvider := user.New(db.Gormdb)
-	chatProvider := chat.New(db.Gormdb)
-	messageProvider := message.New(db.Gormdb)
-	statsProvider := stats.NewProvider(db.Gormdb)
+	userProvider := user.New(db.Conn)
+	chatProvider := chat.New(db.Conn)
+	messageProvider := message.New(db.Conn)
+	statsProvider := stats.NewProvider(db.Conn)
 	cacheStatsProvider := stats.NewCache(statsProvider)
 
 	handle := handler.New(userProvider, chatProvider, messageProvider, cacheStatsProvider)

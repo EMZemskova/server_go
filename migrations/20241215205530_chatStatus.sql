@@ -1,8 +1,2 @@
--- +goose Up
-CREATE TABLE example_table (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
-);
-
--- +goose Down
-DROP TABLE example_table;
+ALTER TABLE chats 
+ADD COLUMN IF NOT EXISTS status VARCHAR(255);
