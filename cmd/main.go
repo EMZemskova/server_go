@@ -5,6 +5,7 @@ import (
 	"github.com/EMZemskova/server_go/internal/chat"
 	"github.com/EMZemskova/server_go/internal/handler"
 	"github.com/EMZemskova/server_go/internal/message"
+	metrics "github.com/EMZemskova/server_go/internal/prometheus"
 	"github.com/EMZemskova/server_go/internal/stats"
 	"github.com/EMZemskova/server_go/internal/storage"
 	"github.com/EMZemskova/server_go/internal/user"
@@ -30,6 +31,8 @@ func main() {
 
 	handle := handler.New(userProvider, chatProvider, messageProvider, cacheStatsProvider)
 	router := internal.GetRouters(handle)
+	metrics.InitMetrics("8081")
+	logrus.Println("Metrics server started on port 8081")
 	router.Run("0.0.0.0:8080")
 	go func() {
 		cacheStatsProvider.StartCacheUpdater()
