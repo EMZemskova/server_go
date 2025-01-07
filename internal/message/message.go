@@ -70,7 +70,8 @@ func (m *message) Edit(message Message, id int64) (Message, error) {
 
 func (m *message) Delete(id int64) error {
 	query := `
-        DELETE FROM messages
+        UPDATE messages
+        SET deletedAt = NOW()
         WHERE id = $1`
 	commandTag, err := m.db.Exec(query, id)
 	if err != nil {

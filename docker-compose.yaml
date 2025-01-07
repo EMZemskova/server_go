@@ -8,6 +8,22 @@ services:
       postgres:
         condition: service_healthy
 
+  test:
+    build:
+      context: .
+      dockerfile: dockerfile.test
+    volumes:
+      - ./migrations:/app/migrations
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:14.10-alpine
     environment:
@@ -38,6 +54,8 @@ services:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml
     ports:
       - "9090:9090"
 

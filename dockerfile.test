@@ -1,0 +1,18 @@
+FROM golang:1.23-alpine
+
+
+WORKDIR /app
+
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+
+COPY . .
+COPY ./migrations ./migrations
+
+
+RUN go install github.com/stretchr/testify
+
+
+CMD ["go", "test", "./...", "-v"]
